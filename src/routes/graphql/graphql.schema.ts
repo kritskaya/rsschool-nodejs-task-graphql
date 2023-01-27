@@ -5,7 +5,15 @@ import {
   GraphQLSchema,
 } from 'graphql';
 import { userType } from './types/basicTypes';
-import { allEntitiesByIdType, allEntitiesType, usersSucribedType, usersWithUsersSubscribeToAndProfileType, userWithDataType, userWithSubscribersAndPostsType } from './types/queryTypes';
+import { mutationType } from './types/mutationTypes';
+import {
+  allEntitiesByIdType,
+  allEntitiesType,
+  usersSucribedType,
+  usersWithUsersSubscribeToAndProfileType,
+  userWithDataType,
+  userWithSubscribersAndPostsType,
+} from './types/queryTypes';
 
 const queryType = new GraphQLObjectType({
   name: 'query',
@@ -57,6 +65,6 @@ const queryType = new GraphQLObjectType({
   }),
 });
 
-const schema = new GraphQLSchema({ query: queryType });
+const schema = new GraphQLSchema({ query: queryType, mutation: mutationType });
 
 export { schema };
