@@ -2,6 +2,7 @@ import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-sc
 import { graphql } from 'graphql';
 import { graphqlBodySchema } from './schema';
 import { schema } from './graphql.schema';
+import { createLoaders } from './dataloader/dataloader';
 
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify
@@ -15,7 +16,10 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
     },
     async function (request, reply) {
       const source = request.body.query || request.body.mutation || '';
-      const contextValue = fastify.db;
+      const contextValue = {
+        db: fastify.db,
+        loaders: createLoaders(fastify.db),
+      };
       const variableValues = request.body.variables;
 
       const result = await graphql({

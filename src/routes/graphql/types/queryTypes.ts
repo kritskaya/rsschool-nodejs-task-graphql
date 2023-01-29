@@ -4,8 +4,8 @@ import {
   GraphQLObjectType,
   GraphQLString,
 } from 'graphql';
-import { PostEntity } from '../../../utils/DB/entities/DBPosts';
-import { UserEntity } from '../../../utils/DB/entities/DBUsers';
+// import { PostEntity } from '../../../utils/DB/entities/DBPosts';
+// import { UserEntity } from '../../../utils/DB/entities/DBUsers';
 import { memberTypeType, postType, profileType, userType } from './basicTypes';
 
 const userWithDataType = new GraphQLObjectType({
@@ -21,34 +21,49 @@ const userWithDataType = new GraphQLObjectType({
     profile: {
       type: profileType,
       resolve: async (user, _args, context) => {
-        const profile = await context.profiles.findOne({
-          key: 'userId',
-          equals: user.id,
-        });
+        // const profile = await context.db.profiles.findOne({
+        //   key: 'userId',
+        //   equals: user.id,
+        // });
+        // return profile;
+        const profile = await context.loaders.profiles.load(user.id);
         return profile;
       },
     },
     posts: {
       type: new GraphQLList(postType),
       resolve: async (user, _args, context) => {
-        const allPosts = await context.posts.findMany();
-        return allPosts.filter((post: PostEntity) => post.userId === user.id);
+        // const allPosts = await context.db.posts.findMany();
+        // return allPosts.filter((post: PostEntity) => post.userId === user.id);
+        const posts = await context.loaders.posts.load(user.id);
+        return posts;
       },
     },
     memberType: {
       type: memberTypeType,
       resolve: async (user, _args, context) => {
-        const profile = await context.profiles.findOne({
-          key: 'userId',
-          equals: user.id,
-        });
+        // const profile = await context.db.profiles.findOne({
+        //   key: 'userId',
+        //   equals: user.id,
+        // });
+
+        // let memberType = null;
+        // if (profile) {
+        //   memberType = await context.db.memberTypes.findOne({
+        //     key: 'id',
+        //     equals: profile.memberTypeId || '',
+        //   });
+        // }
+
+        // return memberType;
+
+        const profile = await context.loaders.profiles.load(user.id);
 
         let memberType = null;
         if (profile) {
-          memberType = await context.memberTypes.findOne({
-            key: 'id',
-            equals: profile.memberTypeId || '',
-          });
+          memberType = await context.loaders.memberTypes.load(
+            profile.memberTypeId
+          );
         }
 
         return memberType;
@@ -67,19 +82,25 @@ const usersWithUsersSubscribeToAndProfileType = new GraphQLObjectType({
     usersSubscribedTo: {
       type: new GraphQLList(userType),
       resolve: async (user, _args, context) => {
-        const users = await context.users.findMany();
-        return users.filter((item: UserEntity) =>
-          item.subscribedToUserIds.includes(user.id)
+        // const users = await context.db.users.findMany();
+        // return users.filter((item: UserEntity) =>
+        //   item.subscribedToUserIds.includes(user.id)
+        // );
+        const subscriptions = await context.loaders.subscribedToUser.load(
+          user.id
         );
+        return subscriptions;
       },
     },
     profile: {
       type: profileType,
       resolve: async (user, _args, context) => {
-        const profile = await context.profiles.findOne({
-          key: 'userId',
-          equals: user.id,
-        });
+        // const profile = await context.db.profiles.findOne({
+        //   key: 'userId',
+        //   equals: user.id,
+        // });
+        // return profile;
+        const profile = await context.loaders.profiles.load(user.id);
         return profile;
       },
     },
@@ -95,43 +116,59 @@ const userWithSubscribersAndPostsType = new GraphQLObjectType({
     email: { type: GraphQLString },
     subscribedToUsers: {
       type: new GraphQLList(userType),
-      resolve: async (user, _args, context) =>
-        await user.subscribedToUserIds.map((id: string) =>
-          context.users.findOne({ key: 'id', equals: id })
-        ),
+      resolve: async (user, _args, context) => {
+        // await user.subscribedToUserIds.map((id: string) =>
+        //   context.db.users.findOne({ key: 'id', equals: id })
+        // ),
+        const subscribedToUsers = await context.loaders.users.loadMany(
+          user.subscribedToUserIds
+        );
+        return subscribedToUsers;
+      },
     },
     posts: {
       type: new GraphQLList(postType),
       resolve: async (user, _args, context) => {
-        const allPosts = await context.posts.findMany();
-        return allPosts.filter((post: PostEntity) => post.userId === user.id);
+        // const allPosts = await context.db.posts.findMany();
+        // return allPosts.filter((post: PostEntity) => post.userId === user.id);
+        const posts = await context.loaders.posts.load(user.id);
+        return posts;
       },
     },
   }),
 });
 
-const usersSubcribedType: GraphQLObjectType = new GraphQLObjectType({
-  name: 'usersSubcribedType',
+const usersSubscriptionsType: GraphQLObjectType = new GraphQLObjectType({
+  name: 'usersSubscriptions',
   fields: () => ({
     id: { type: GraphQLID },
     firstName: { type: GraphQLString },
     lastName: { type: GraphQLString },
     email: { type: GraphQLString },
     usersSubscribedTo: {
-      type: new GraphQLList(usersSubcribedType),
+      type: new GraphQLList(usersSubscriptionsType),
       resolve: async (user, _args, context) => {
-        const users = await context.users.findMany();
-        return users.filter((item: UserEntity) =>
-          item.subscribedToUserIds.includes(user.id)
+        // const users = await context.db.users.findMany();
+        // return users.filter((item: UserEntity) =>
+        //   item.subscribedToUserIds.includes(user.id)
+        // );
+        const subscriptions = await context.loaders.subscribedToUser.load(
+          user.id
         );
+        return subscriptions;
       },
     },
-    subscribedToUsers: {
-      type: new GraphQLList(usersSubcribedType),
-      resolve: async (user, _args, context) =>
-        await user.subscribedToUserIds.map((id: string) =>
-          context.users.findOne({ key: 'id', equals: id })
-        ),
+    subscribedToUser: {
+      type: new GraphQLList(usersSubscriptionsType),
+      resolve: async (user, _args, context) => {
+        // await user.subscribedToUserIds.map((id: string) =>
+        //   context.db.users.findOne({ key: 'id', equals: id })
+        // ),
+        const subscribedToUser = await context.loaders.users.loadMany(
+          user.subscribedToUserIds
+        );
+        return subscribedToUser;
+      }
     },
   }),
 });
@@ -141,19 +178,19 @@ const allEntitiesType = new GraphQLObjectType({
   fields: () => ({
     users: {
       type: new GraphQLList(userType),
-      resolve: (_obj, _args, context) => context.users.findMany(),
+      resolve: (_obj, _args, context) => context.db.users.findMany(),
     },
     posts: {
       type: new GraphQLList(postType),
-      resolve: (_obj, _args, context) => context.posts.findMany(),
+      resolve: (_obj, _args, context) => context.db.posts.findMany(),
     },
     profiles: {
       type: new GraphQLList(profileType),
-      resolve: (_obj, _args, context) => context.profiles.findMany(),
+      resolve: (_obj, _args, context) => context.db.profiles.findMany(),
     },
     memberTypes: {
       type: new GraphQLList(memberTypeType),
-      resolve: (_obj, _args, context) => context.memberTypes.findMany(),
+      resolve: (_obj, _args, context) => context.db.memberTypes.findMany(),
     },
   }),
 });
@@ -167,7 +204,10 @@ const allEntitiesByIdType = new GraphQLObjectType({
         userId: { type: GraphQLID },
       },
       resolve: async (_obj, { userId }, context) => {
-        const user = await context.users.findOne({ key: 'id', equals: userId });
+        const user = await context.db.users.findOne({
+          key: 'id',
+          equals: userId,
+        });
         if (!user) {
           throw new Error('user with specified id is not found');
         }
@@ -180,7 +220,10 @@ const allEntitiesByIdType = new GraphQLObjectType({
         postId: { type: GraphQLID },
       },
       resolve: async (_obj, { postId }, context) => {
-        const post = await context.posts.findOne({ key: 'id', equals: postId });
+        const post = await context.db.posts.findOne({
+          key: 'id',
+          equals: postId,
+        });
         if (!post) {
           throw new Error('post with specified id is not found');
         }
@@ -193,7 +236,7 @@ const allEntitiesByIdType = new GraphQLObjectType({
         profileId: { type: GraphQLID },
       },
       resolve: async (_obj, { profileId }, context) => {
-        const profile = await context.profiles.findOne({
+        const profile = await context.db.profiles.findOne({
           key: 'id',
           equals: profileId,
         });
@@ -209,7 +252,7 @@ const allEntitiesByIdType = new GraphQLObjectType({
         memberTypeId: { type: GraphQLID },
       },
       resolve: async (_obj, { memberTypeId }, context) => {
-        const memberType = await context.memberTypes.findOne({
+        const memberType = await context.db.memberTypes.findOne({
           key: 'id',
           equals: memberTypeId,
         });
@@ -226,7 +269,7 @@ export {
   userWithDataType,
   usersWithUsersSubscribeToAndProfileType,
   userWithSubscribersAndPostsType,
-  usersSubcribedType,
+  usersSubscriptionsType,
   allEntitiesType,
   allEntitiesByIdType,
 };
