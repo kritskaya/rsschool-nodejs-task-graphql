@@ -15,9 +15,9 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
     },
     async function (request, reply) {
       const source = request.body.query || request.body.mutation || '';
-      console.log(source);
       const contextValue = fastify.db;
       const variableValues = request.body.variables;
+
       const result = await graphql({
         schema,
         source,

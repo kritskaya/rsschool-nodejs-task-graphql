@@ -111,8 +111,32 @@ const mutationType = new GraphQLObjectType({
       args: {
         profileData: { type: createProfileInputType },
       },
-      resolve: (_obj, args, context) =>
-        context.profiles.create({
+      resolve: async (_obj, args, context) => {
+        const profile = await context.profiles.findOne({
+          key: 'id',
+          equals: args.profileData.id,
+        });
+        if (profile) {
+          throw new Error('profile for this user already exists');
+        }
+
+        const user = await context.users.findOne({
+          key: 'id',
+          equals: args.profileData.userId,
+        });
+        if (!user) {
+          throw new Error('user with specified id is not found');
+        }
+
+        const memberType = await context.memberTypes.findOne({
+          key: 'id',
+          equals: args.profileData.memberTypeId,
+        });
+        if (!memberType) {
+          throw new Error('memberType with specified id is not found');
+        }
+
+        return context.profiles.create({
           avatar: args.profileData.avatar,
           sex: args.profileData.sex,
           birthday: args.profileData.birthday,
@@ -121,39 +145,74 @@ const mutationType = new GraphQLObjectType({
           city: args.profileData.city,
           memberTypeId: args.profileData.memberTypeId,
           userId: args.profileData.userId,
-        }),
+        });
+      },
     },
     createPost: {
       type: postType,
       args: {
         postData: { type: createPostInputType },
       },
-      resolve: (_obj, args, context) =>
-        context.posts.create({
+      resolve: async (_obj, args, context) => {
+        const user = await context.users.findOne({
+          key: 'id',
+          equals: args.postData.userId,
+        });
+        if (!user) {
+          throw new Error('user with specified id is not found');
+        }
+
+        return context.posts.create({
           title: args.postData.title,
           content: args.postData.content,
           userId: args.postData.userId,
-        }),
+        });
+      },
     },
     updateUser: {
       type: userType,
       args: {
         userData: { type: updateUserInputType },
       },
-      resolve: (_obj, args, context) =>
-        context.users.change(args.userData.id, {
+      resolve: async (_obj, args, context) => {
+        const user = await context.users.findOne({
+          key: 'id',
+          equals: args.userData.id,
+        });
+        if (!user) {
+          throw new Error('user with specified id is not found');
+        }
+
+        return context.users.change(args.userData.id, {
           firstName: args.userData.firstName,
           lastName: args.userData.lastName,
           email: args.userData.email,
-        }),
+        });
+      },
     },
     updateProfile: {
       type: profileType,
       args: {
         profileData: { type: updateProfileInputType },
       },
-      resolve: (_obj, args, context) =>
-        context.profiles.change(args.profileData.id, {
+      resolve: async (_obj, args, context) => {
+        const profile = await context.profiles.findOne({
+          key: 'id',
+          equals: args.profileData.id,
+        });
+        if (!profile) {
+          throw new Error('profile with specified id is not found');
+        }
+
+        const memberType = await context.memberTypes.findOne({
+          key: 'id',
+          equals: args.profileData.memberTypeId,
+        });
+        if (!memberType) {
+          throw new Error('memberType with specified id is not found');
+        }
+
+        return context.profiles.change(args.profileData.id, {
           avatar: args.profileData.avatar,
           sex: args.profileData.sex,
           birthday: args.profileData.birthday,
@@ -161,35 +220,52 @@ const mutationType = new GraphQLObjectType({
           street: args.profileData.street,
           city: args.profileData.city,
           memberTypeId: args.profileData.memberTypeId,
-        }),
+        });
+      },
     },
     updatePost: {
       type: postType,
       args: {
         postData: { type: updatePostInputType },
       },
-      resolve: (_obj, args, context) =>
-        context.posts.change(args.postData.id, {
+      resolve: async (_obj, args, context) => {
+        const post = await context.posts.findOne({
+          key: 'id',
+          equals: args.postData.id,
+        });
+        if (!post) {
+          throw new Error('post with specified id is not found');
+        }
+
+        return context.posts.change(args.postData.id, {
           title: args.postData.title,
           content: args.postData.content,
-        }),
+        });
+      },
     },
     updateMemberType: {
       type: memberTypeType,
       args: {
         memberTypeData: { type: updateMemberTypeInputType },
       },
-      resolve: (_obj, args, context) =>
-        context.memberTypes.change(args.memberTypeData.id, {
+      resolve: async (_obj, args, context) => {
+        const memberType = await context.memberTypes.findOne({
+          key: 'id',
+          equals: args.memberTypeData.id,
+        });
+        if (!memberType) {
+          throw new Error('memberType with specified id is not found');
+        }
+
+        return context.memberTypes.change(args.memberTypeData.id, {
           discount: args.memberTypeData.discount,
           monthPostsLimit: args.memberTypeData.monthPostsLimit,
-        }),
+        });
+      },
     },
     subscribedToUsers: {
       type: userType,
       args: {
-        // userId: { type: GraphQLID },
-        // subscribeToId: { type: GraphQLID },
         subscribingData: { type: subscribingInputType },
       },
       resolve: async (_obj, args, context) => {
@@ -197,6 +273,23 @@ const mutationType = new GraphQLObjectType({
           key: 'id',
           equals: args.subscribingData.userId,
         });
+        if (!user) {
+          throw new Error('user with specified id not found');
+        }
+
+        const subscribeTo: UserEntity = await context.users.findOne({
+          key: 'id',
+          equals: args.subscribingData.subscribeToId,
+        });
+        if (!subscribeTo) {
+          throw new Error('subscribeTo user with specified id not found');
+        }
+
+        if (
+          user.subscribedToUserIds.includes(args.subscribingData.subscribeToId)
+        ) {
+          throw new Error('user has already subscribed to specified user');
+        }
 
         return context.users.change(args.subscribingData.userId, {
           subscribedToUserIds: [
@@ -216,12 +309,22 @@ const mutationType = new GraphQLObjectType({
           key: 'id',
           equals: args.unsubscribingData.userId,
         });
+        if (!user) {
+          throw new Error('user with specified id not found');
+        }
+
+        const unsubscribeTo: UserEntity = await context.users.findOne({
+          key: 'id',
+          equals: args.unsubscribingData.subscribeToId,
+        });
+        if (!unsubscribeTo) {
+          throw new Error('unsubscribeTo user with specified id not found');
+        }
 
         return context.users.change(args.unsubscribingData.userId, {
           subscribedToUserIds: [
             ...user.subscribedToUserIds.filter(
-              (item: UserEntity) =>
-                item.id !== args.unsubscribingData.unsubscribeToId
+              (id: string) => id !== args.unsubscribingData.subscribeToId
             ),
           ],
         });

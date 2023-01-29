@@ -4,12 +4,11 @@ import {
   GraphQLObjectType,
   GraphQLSchema,
 } from 'graphql';
-import { userType } from './types/basicTypes';
 import { mutationType } from './types/mutationTypes';
 import {
   allEntitiesByIdType,
   allEntitiesType,
-  usersSucribedType,
+  usersSubcribedType,
   usersWithUsersSubscribeToAndProfileType,
   userWithDataType,
   userWithSubscribersAndPostsType,
@@ -26,14 +25,6 @@ const queryType = new GraphQLObjectType({
       type: allEntitiesByIdType,
       resolve: () => '',
     },
-    user: {
-      type: userType,
-      args: {
-        userId: { type: GraphQLID },
-      },
-      resolve: (_obj, { userId }, context) =>
-        context.users.findOne({ key: 'id', equals: userId }),
-    },
     usersWithData: {
       type: new GraphQLList(userWithDataType),
       resolve: (_obj, _args, context) => context.users.findMany(),
@@ -43,8 +34,13 @@ const queryType = new GraphQLObjectType({
       args: {
         userId: { type: GraphQLID },
       },
-      resolve: (_obj, { userId }, context) =>
-        context.users.findOne({ key: 'id', equals: userId }),
+      resolve: async (_obj, { userId }, context) => {
+        const user = await context.users.findOne({ key: 'id', equals: userId });
+        if (!user) {
+          throw new Error('user with specified id is not found');
+        }
+        return user;
+      },
     },
     usersWithUsersSubscribeToAndProfile: {
       type: new GraphQLList(usersWithUsersSubscribeToAndProfileType),
@@ -55,11 +51,16 @@ const queryType = new GraphQLObjectType({
       args: {
         userId: { type: GraphQLID },
       },
-      resolve: (_obj, { userId }, context) =>
-        context.users.findOne({ key: 'id', equals: userId }),
+      resolve: async (_obj, { userId }, context) => {
+        const user = await context.users.findOne({ key: 'id', equals: userId })
+        if (!user) {
+          throw new Error('user with specified id is not found');
+        }
+        return user;
+      }
     },
     usersSubscribed: {
-      type: new GraphQLList(usersSucribedType),
+      type: new GraphQLList(usersSubcribedType),
       resolve: (_obj, _args, context) => context.users.findMany(),
     },
   }),
