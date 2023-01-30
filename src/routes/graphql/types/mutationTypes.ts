@@ -184,9 +184,10 @@ const mutationType = new GraphQLObjectType({
         }
 
         return context.db.users.change(args.userData.id, {
-          firstName: args.userData.firstName,
-          lastName: args.userData.lastName,
-          email: args.userData.email,
+          ...user,
+          firstName: args.userData.firstName || user.firstName,
+          lastName: args.userData.lastName || user.lastName,
+          email: args.userData.email || user.email,
         });
       },
     },
@@ -213,13 +214,14 @@ const mutationType = new GraphQLObjectType({
         }
 
         return context.db.profiles.change(args.profileData.id, {
-          avatar: args.profileData.avatar,
-          sex: args.profileData.sex,
-          birthday: args.profileData.birthday,
-          country: args.profileData.country,
-          street: args.profileData.street,
-          city: args.profileData.city,
-          memberTypeId: args.profileData.memberTypeId,
+          ...profile,
+          avatar: args.profileData.avatar || profile.avatar,
+          sex: args.profileData.sex || profile.sex,
+          birthday: args.profileData.birthday || profile.birthday,
+          country: args.profileData.country || profile.country,
+          street: args.profileData.street || profile.street,
+          city: args.profileData.city || profile.city,
+          memberTypeId: args.profileData.memberTypeId || profile.memberTypeId,
         });
       },
     },
@@ -238,8 +240,9 @@ const mutationType = new GraphQLObjectType({
         }
 
         return context.db.posts.change(args.postData.id, {
-          title: args.postData.title,
-          content: args.postData.content,
+          ...post,
+          title: args.postData.title || post.title,
+          content: args.postData.content || post.content,
         });
       },
     },
@@ -258,8 +261,10 @@ const mutationType = new GraphQLObjectType({
         }
 
         return context.db.memberTypes.change(args.memberTypeData.id, {
-          discount: args.memberTypeData.discount,
-          monthPostsLimit: args.memberTypeData.monthPostsLimit,
+          ...memberType,
+          discount: args.memberTypeData.discount || memberType.discount,
+          monthPostsLimit:
+            args.memberTypeData.monthPostsLimit || memberType.monthPostsLimit,
         });
       },
     },
