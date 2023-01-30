@@ -4,8 +4,6 @@ import {
   GraphQLObjectType,
   GraphQLString,
 } from 'graphql';
-// import { PostEntity } from '../../../utils/DB/entities/DBPosts';
-// import { UserEntity } from '../../../utils/DB/entities/DBUsers';
 import { memberTypeType, postType, profileType, userType } from './basicTypes';
 
 const userWithDataType = new GraphQLObjectType({
@@ -21,6 +19,7 @@ const userWithDataType = new GraphQLObjectType({
     profile: {
       type: profileType,
       resolve: async (user, _args, context) => {
+        // CODE BEFORE USING DATA LOADER
         // const profile = await context.db.profiles.findOne({
         //   key: 'userId',
         //   equals: user.id,
@@ -33,6 +32,7 @@ const userWithDataType = new GraphQLObjectType({
     posts: {
       type: new GraphQLList(postType),
       resolve: async (user, _args, context) => {
+        // CODE BEFORE USING DATA LOADER
         // const allPosts = await context.db.posts.findMany();
         // return allPosts.filter((post: PostEntity) => post.userId === user.id);
         const posts = await context.loaders.posts.load(user.id);
@@ -42,6 +42,7 @@ const userWithDataType = new GraphQLObjectType({
     memberType: {
       type: memberTypeType,
       resolve: async (user, _args, context) => {
+        // CODE BEFORE USING DATA LOADER
         // const profile = await context.db.profiles.findOne({
         //   key: 'userId',
         //   equals: user.id,
@@ -82,6 +83,7 @@ const usersWithUsersSubscribeToAndProfileType = new GraphQLObjectType({
     usersSubscribedTo: {
       type: new GraphQLList(userType),
       resolve: async (user, _args, context) => {
+        // CODE BEFORE USING DATA LOADER
         // const users = await context.db.users.findMany();
         // return users.filter((item: UserEntity) =>
         //   item.subscribedToUserIds.includes(user.id)
@@ -95,6 +97,7 @@ const usersWithUsersSubscribeToAndProfileType = new GraphQLObjectType({
     profile: {
       type: profileType,
       resolve: async (user, _args, context) => {
+        // CODE BEFORE USING DATA LOADER
         // const profile = await context.db.profiles.findOne({
         //   key: 'userId',
         //   equals: user.id,
@@ -117,6 +120,7 @@ const userWithSubscribersAndPostsType = new GraphQLObjectType({
     subscribedToUsers: {
       type: new GraphQLList(userType),
       resolve: async (user, _args, context) => {
+        // CODE BEFORE USING DATA LOADER
         // await user.subscribedToUserIds.map((id: string) =>
         //   context.db.users.findOne({ key: 'id', equals: id })
         // ),
@@ -129,6 +133,7 @@ const userWithSubscribersAndPostsType = new GraphQLObjectType({
     posts: {
       type: new GraphQLList(postType),
       resolve: async (user, _args, context) => {
+        // CODE BEFORE USING DATA LOADER
         // const allPosts = await context.db.posts.findMany();
         // return allPosts.filter((post: PostEntity) => post.userId === user.id);
         const posts = await context.loaders.posts.load(user.id);
@@ -148,6 +153,7 @@ const usersSubscriptionsType: GraphQLObjectType = new GraphQLObjectType({
     usersSubscribedTo: {
       type: new GraphQLList(usersSubscriptionsType),
       resolve: async (user, _args, context) => {
+        // CODE BEFORE USING DATA LOADER
         // const users = await context.db.users.findMany();
         // return users.filter((item: UserEntity) =>
         //   item.subscribedToUserIds.includes(user.id)
@@ -161,6 +167,7 @@ const usersSubscriptionsType: GraphQLObjectType = new GraphQLObjectType({
     subscribedToUser: {
       type: new GraphQLList(usersSubscriptionsType),
       resolve: async (user, _args, context) => {
+        // CODE BEFORE USING DATA LOADER
         // await user.subscribedToUserIds.map((id: string) =>
         //   context.db.users.findOne({ key: 'id', equals: id })
         // ),
