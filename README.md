@@ -66,11 +66,532 @@ But be careful because these tests are integration (E.g. to test "delete" logic 
 You are free to create your own gql environment as long as you use predefined graphql endpoint (./src/routes/graphql/index.ts).  
 (or stick to the [default code-first](https://github.dev/graphql/graphql-js/blob/ffa18e9de0ae630d7e5f264f72c94d497c70016b/src/__tests__/starWarsSchema.ts))  
 
+!!! To check this task you need the Postman program (or similar)  
+- choose POST method for every request  
+- the endpoint is the same for every request  
+- you should paste the body in the QUERY section in the Postman, the variables in GRAPHQL VARIABLES section  
+![screen](https://i.ibb.co/H7y4CNV/2023-01-30-165355.jpg)
+
+Despite condition ``If the properties of the entity are not specified, then return the id of it`` some additional fields were added to the queries for easier task check and verification.
+
+Examples of POST body and dynamic variables for the GraphQL queries:
+
+2.1  
+body:
+```
+query {
+    allEntities {  
+       users {  
+           id  
+           firstName  
+           lastName  
+       }  
+       posts {  
+           id  
+           title  
+           content  
+       }
+       profiles {
+           id
+           sex
+           birthday
+       }
+       memberTypes {
+           id
+           discount
+           monthPostsLimit
+       }
+   }
+}
+```
+
+2.2  
+body 
+```
+query {
+   allEntities {
+       users {
+           id
+           firstName
+           lastName
+       }
+       posts {
+           id
+           title
+           content
+       }
+       profiles {
+           id
+           sex
+           birthday
+       }
+       memberTypes {
+           id
+           discount
+           monthPostsLimit
+       }
+   }
+}
+```
+variables: 
+```
+{
+    "userId": "INSERT_USER_ID",
+    "profileId": "INSERT_PROFILE_ID",
+    "postId": "INSERT_POST_ID",
+    "memberTypeId": "INSERT_MEMBER_TYPE_ID"
+}
+```
+
+2.3  
+body:
+```
+query {
+    usersWithData {
+        id,
+        firstName
+        lastName
+        profile {
+            id
+            memberTypeId
+            userId
+        }
+        posts {
+            id
+            title
+            userId
+        }
+        memberType {
+            id
+            discount
+            monthPostsLimit
+        }
+    }
+}
+```
+
+2.4  
+body:
+```
+query ($userId: ID!) {
+    userWithDataById (userId: $userId) {
+        id
+        firstName
+        lastName
+        profile {
+            id
+            sex
+            birthday
+        }
+        posts {
+            id
+            title
+            content
+        }
+        memberType {
+            id
+            discount
+            monthPostsLimit
+        }
+    }
+}
+```
+variables:
+```
+{
+    "userId": "INSERT_USER_ID"
+}
+```
+
+2.5  
+body:
+```
+query {
+    usersWithUsersSubscribeToAndProfile {
+        id
+        firstName
+        lastName
+        usersSubscribedTo {
+            id
+            firstName
+            lastName
+        }
+        profile {
+            id
+            sex
+            birthday
+            userId
+        }
+    }
+}
+```
+
+2.6  
+body:
+```
+query ($userId: ID!) {
+    userWithSubscribersAndPosts (userId: $userId) {
+        id
+        firstName
+        lastName
+        subscribedToUsers {
+            id
+            firstName
+            lastName
+            subscribedToUserIds
+        }
+        posts {
+            id
+            title
+            content
+            userId
+        }
+    }
+}
+```
+variables:
+```
+{
+    "userId": "INSERT_USER_ID"
+}
+```
+
+2.7  
+body:
+```
+query {
+    usersSubscribtions {
+        id
+        firstName
+        lastName
+        usersSubscribedTo {
+            ...subscription
+            usersSubscribedTo {
+                ...subscription
+            }
+        }
+        subscribedToUser {
+            ...subscription
+            subscribedToUser {
+                ...subscription
+            }
+        }
+    }
+}
+
+fragment subscription on usersSubscriptions {
+    id
+    firstName
+    lastName
+}
+```
+
+2.8  
+body:
+```
+mutation ($userData: createUserInput) {
+    createUser (userData: $userData) {
+        id
+        firstName
+        lastName
+        email
+        subscribedToUserIds
+    }
+}
+```
+variables:
+```
+{
+    "userData": {
+        "firstName": "Ivan",
+        "lastName": "Ivanov",
+        "email": "email@no.email"
+    }
+}
+```
+
+2.9  
+body:
+```
+mutation ($profileData: createProfileInput){
+    createProfile (profileData: $profileData) {
+        id
+        avatar
+        sex
+        birthday
+        country
+        street
+        city
+        memberTypeId
+        userId
+    }
+}
+```
+variables:
+```
+{
+    "profileData": {
+        "avatar": "no avatar",
+        "sex": "male",
+        "birthday": 124578925,
+        "country": "Belarus",
+        "street": "Street",
+        "city": "Minsk",
+        "memberTypeId": "basic",
+        "userId": "INSERT_USER_ID"
+    }
+}
+```
+
+2.10  
+body:
+```
+mutation ($postData: createPostInput) {
+    createPost (postData: $postData) {
+        id
+        title
+        content
+        userId
+    }
+}
+```
+
+variables:
+```
+{
+    "postData": {
+        "title": "Post",
+        "content": "Post content",
+        "userId": "INSERT_USER_ID"
+    }
+}
+```
+
+2.11 InputObjectType for DTO were created in ``src\routes\graphql\types\mutationTypes.ts``
+
+2.12  
+body:
+```
+mutation ($userData: updateUserInput) {
+   updateUser (userData: $userData) {
+        id
+        firstName
+        lastName
+        email
+        subscribedToUserIds
+    }
+}
+```
+variables:
+```
+{
+    "userData": {
+        "id": "INSERT_USER_ID",
+        "firstName": "Ivan2",
+        "lastName": "Ivanov2",
+        "email": "email@no.email2"
+    }
+}
+```
+
+2.13  
+body:
+```
+mutation ($profileData: updateProfileInput) {
+    updateProfile (profileData: $profileData) {
+        id
+        avatar
+        sex
+        birthday
+        country
+        street
+        city
+        memberTypeId
+        userId
+    }
+}
+```
+variables:
+```
+{
+    "profileData": {
+        "id": "INSERT_PROFILE_ID",
+        "avatar": "no_avatar",
+        "sex": "male",
+        "birthday": 124578925,
+        "country": "Belarus2",
+        "street": "street2",
+        "city": "Minsk2",
+        "memberTypeId": "basic"
+    }
+}
+```
+
+2.14  
+body:
+```
+mutation ($postData: updatePostInput) {
+    updatePost (postData: $postData) {
+        id
+        title
+        content
+        userId
+    }
+}
+```
+
+variables:
+```
+{
+    "postData": {
+        "id": "INSERT_POST_ID",
+        "title": "Post2",
+        "content": "Post content2"
+    }
+}
+```
+
+2.15  
+body:
+```
+mutation ($memberTypeData: updateMemberTypeInput) {
+    updateMemberType ( memberTypeData: $memberTypeData) {
+        id
+        discount
+        monthPostsLimit
+    }
+}
+```
+
+variables:
+```
+{
+    "memberTypeData": {
+        "id": "basic", 
+        "discount": 2, 
+        "monthPostsLimit": 30
+    }
+}
+```
+
+2.16   
+body for subscribe:
+```
+mutation ($subscribingData: subscribingInput) {
+    subscribedToUsers (subscribingData: $subscribingData){
+        id
+        firstName
+        lastName
+        subscribedToUserIds
+    }
+}
+```
+
+variables:
+```
+{
+    "subscribingData": {
+        "userId": "INSERT_USER_ID",
+        "subscribeToId": "INSER_USER_ID"
+    }
+}
+```
+
+body for unsubscribe:
+```
+mutation ($unsubscribingData: subscribingInput) {
+    unsubscribedToUsers (unsubscribingData: $unsubscribingData){
+        id
+        firstName
+        lastName
+        subscribedToUserIds
+    }
+}
+```
+
+variables:
+```
+{
+    "unsubscribingData": {
+        "userId": "INSERT_USER_ID",
+        "subscribeToId": "INSER_USER_ID"
+    }
+}
+```
+
+2.17 InputObjectType for DTO were created in ``src\routes\graphql\types\mutationTypes.ts``
+
 ### Description for the 3 task:
 If you have chosen a non-default gql environment, then the connection of some functionality may differ, be sure to report this in the PR.  
+
+Function that leads to data loaders creation in the gql context is called in file ``src\routes\graphql\index.ts`` at ``line 22``
+
+Data loaders were called in the resolver:
+
+for implementing task 2.3 and 2.4:
+- in file ``src\routes\graphql\types\queryTypes.ts`` at line 28
+- in file ``src\routes\graphql\types\queryTypes.ts`` at line 38
+- in file ``src\routes\graphql\types\queryTypes.ts`` at line 61
+
+for implementing task 2.5:
+- in file ``src\routes\graphql\types\queryTypes.ts`` at line 91
+- in file ``src\routes\graphql\types\queryTypes.ts`` at line 106
+
+for implementing task 2.6:
+- in file ``src\routes\graphql\types\queryTypes.ts`` at line 127
+- in file ``src\routes\graphql\types\queryTypes.ts`` at line 139
+
+for implementing task 2.7:
+- in file ``src\routes\graphql\types\queryTypes.ts`` at line 161
+- in file ``src\routes\graphql\types\queryTypes.ts`` at line 174
 
 ### Description for the 4 task:  
 If you have chosen a non-default gql environment, then the connection of some functionality may differ, be sure to report this in the PR.  
 Limit the complexity of the graphql queries by their depth with "graphql-depth-limit" package.  
 E.g. User can refer to other users via properties `userSubscribedTo`, `subscribedToUser` and users within them can also have `userSubscribedTo`, `subscribedToUser` and so on.  
 Your task is to add a new rule (created by "graphql-depth-limit") in [validation](https://graphql.org/graphql-js/validation/) to limit such nesting to (for example) 6 levels max.
+
+POST body of gql query:
+```
+query {
+    usersSubscribtions {
+        id
+        firstName
+        lastName
+        usersSubscribedTo {
+            ...subscription
+            usersSubscribedTo {
+                ...subscription
+                usersSubscribedTo {
+                    ...subscription
+                    usersSubscribedTo {
+                        ...subscription
+                        usersSubscribedTo {
+                            ...subscription
+                            usersSubscribedTo {
+                                ...subscription
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+fragment subscription on usersSubscriptions {
+    id
+    firstName
+    lastName
+}
+```
+
+expected result:
+```
+{
+    "errors": {
+        "message": "query exceeds maximum operation depth of 6"
+    },
+    "data": null
+}
+```
